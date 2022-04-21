@@ -1,6 +1,5 @@
-from ast import While
-from asyncio.windows_events import NULL
 import json
+import re
 import sys
 from os import path
 from datetime import datetime
@@ -25,6 +24,7 @@ sem4 = ["Database", "Value and Ethics", "System Design"]
 sem5 = ["Operating System", "Python", "System Software"]
 sem6 = ["Numerical Analysis", "System Programming", "Project Work"]
 
+sem_colect = [sem1, sem2, sem3, sem4, sem5, sem6]
 # Check if file exists
 if path.isfile(filename) is False:
     with open("Student.json", "w") as outfile:
@@ -86,9 +86,7 @@ def view_all_rec():
 def print_sem_wise(n_val, sem):
     tot = 0
     global markIndex
-
     for j in range(len(data[sem])):
-
         if data['Students'][n_val-1]['Roll Number'] == data[sem][j]['Roll Number']:
             for key in data[sem][j]:
                 markIndex += 1
@@ -135,68 +133,58 @@ def view_rec_by_id(n_val):
     main()
 
 
-def common_student_data(roll_number):
-    list_data = []
+# student_profile_detail FOR  common_student_data
+def student_profile_detail(roll_number):
     student_details = {
-        "Name": str(input("Enter name: ")),
+        "Name": valid_string(stu_detail[0]),
         "DateOfBirth": valid_dob(),
-        "PlaceOfBirth":  str(input("Enter PlaceOfBirth: ")),
+        "PlaceOfBirth":  valid_string(stu_detail[2]),
         "Roll Number":  roll_number
     }
+    return student_details
+
+
+# ADD SEMESTER MARKS FOR common_student_data
+def semester_marks(roll_number, sem_name, sem):
+    print(sem_name)
+    semester = {
+        "Roll Number": roll_number,
+        sem[0]: valid_mark(sem[0]),
+        sem[1]: valid_mark(sem[1]),
+        sem[2]: valid_mark(sem[2])
+    }
+    return semester
+
+
+# STRING VALIDATION FOR common_student_data
+def valid_string(tst):
+    while True:
+        pri = "Enter "+tst+" : "
+        val = str(input(pri))
+        if val.strip() != '':
+            try:
+                int(val)
+                None
+            except ValueError:
+                return val
+        else:
+            None
+
+
+# COMMON STUDENT DATA FOR CREATE STUDENT & EDIT STUDENT
+def common_student_data(roll_number):
+    list_data = []
+    student_details = student_profile_detail(roll_number)
     list_data.append(student_details)
-    print("SEMESTER-1 MARKS----------")
-    semester1 = {
-        "Roll Number": roll_number,
-        sem1[0]: valid_mark(sem1[0]),
-        sem1[1]: valid_mark(sem1[1]),
-        sem1[2]: valid_mark(sem1[2])
-    }
-    list_data.append(semester1)
-    print("SEMESTER-2 MARKS----------")
-    semester2 = {
-        "Roll Number": roll_number,
-        sem2[0]: valid_mark(sem2[0]),
-        sem2[1]: valid_mark(sem2[1]),
-        sem2[2]: valid_mark(sem2[2])
-    }
-    list_data.append(semester2)
-    print("SEMESTER-3 MARKS----------")
-    semester3 = {
-        "Roll Number": roll_number,
-        sem3[0]: valid_mark(sem3[0]),
-        sem3[1]: valid_mark(sem3[1]),
-        sem3[2]: valid_mark(sem3[2])
-    }
-    list_data.append(semester3)
-    print("SEMESTER-4 MARKS----------")
-    semester4 = {
-        "Roll Number": roll_number,
-        sem4[0]: valid_mark(sem4[0]),
-        sem4[1]: valid_mark(sem4[1]),
-        sem4[2]: valid_mark(sem4[2])
-    }
-    list_data.append(semester4)
-    print("SEMESTER-5 MARKS----------")
-    semester5 = {
-        "Roll Number": roll_number,
-        sem5[0]: valid_mark(sem5[0]),
-        sem5[1]: valid_mark(sem5[1]),
-        sem5[2]: valid_mark(sem5[2])
-    }
-    list_data.append(semester5)
-    print("SEMESTER-6 MARKS----------")
-    semester6 = {
-        "Roll Number": roll_number,
-        sem6[0]: valid_mark(sem6[0]),
-        sem6[1]: valid_mark(sem6[1]),
-        sem6[2]: valid_mark(sem6[2])
-    }
-    list_data.append(semester6)
+
+    for l in range(6):
+        semester = semester_marks(roll_number, semesters[l], sem_colect[l])
+        list_data.append(semester)
+
     return list_data
 
+
 # CHECK STUDENT BY ID FOR CREATE STU
-
-
 def chk_student_byID(roll_number):
     for i in range(len(data['Students'])):
         if data['Students'][i]['Roll Number'] == roll_number:
@@ -220,13 +208,12 @@ def valid_dob():
         except:
             None
 
+
 # VALIDATE MARKS FOR CREATE NEW STUDENT
-
-
 def valid_mark(str):
     while True:
-        print("Enter ", str, " Mark (Max *100) : ")
-        num = input()
+        pri = "Enter "+str+" Mark (Max *100) : "
+        num = input(pri)
         try:
             num = int(num)
             if num >= 0 and num <= 100:
@@ -234,9 +221,8 @@ def valid_mark(str):
         except ValueError:
             None
 
+
 # CREATE NEW STUDENT
-
-
 def new_student():
     while True:
         try:
@@ -256,34 +242,117 @@ def new_student():
             None
 
 
+# edit_opt FOR edit_student
+def edit_opt():
+    print('\tEDIT OPTIONS\t\n=============================')
+    print(
+        '0. Edit student profile\t\t1. Edit semester-1 Marks\n2. Edit semester-2 Marks' +
+        '\t3. Edit semester-3 Marks\n4. Edit semester-4 Marks\t5. Edit semester-5 Marks' +
+        '\n6. Edit semester-6 Marks\t7. Edit Full Details\n8. Back')
+    print('=============================')
+
+    u_option = input("Enter Valid Option : ")
+
+    try:
+        u_option = int(u_option)
+        if u_option >= 0 and u_option <= 8:
+            if u_option == 8:
+                main()
+            else:
+                return u_option
+    except ValueError:
+        None
+
+
+# GET SEMESTER MARKS
+def get_marks_by_id(roll_number, semester):
+    for j in range(len(data[semester])):
+        if data[semester][j]['Roll Number'] == roll_number:
+            return data[semester][j]
+
+
+# GET STUDENT PROFILE
+def get_student_profile_by_id(roll_number):
+    for j in range(len(data["Students"])):
+        if data["Students"][j]['Roll Number'] == roll_number:
+            return data["Students"][j]
+
+
+def edit_particular_sem_mark(list_data, roll_num, sem_number):
+    stu_profile = get_student_profile_by_id(roll_num)
+    list_data.append(stu_profile)
+    for i in range(6):
+        if i == sem_number:
+            sem = semester_marks(
+                roll_num, semesters[i], sem_colect[i])
+            list_data.append(sem)
+            continue
+        sem = get_marks_by_id(roll_num, semesters[i])
+        list_data.append(sem)
+    return list_data
+
+
+# EDIT STUDENT
 def edit_student(roll_num):
     while True:
         try:
-            stu_details = common_student_data(roll_num)
-            return stu_details
+            opt = edit_opt()
+            list_data = []
+            if opt == 0:
+
+                stu_profile = student_profile_detail(roll_num)
+                list_data.append(stu_profile)
+                for i in range(6):
+                    sem = get_marks_by_id(roll_num, semesters[i])
+                    list_data.append(sem)
+                return list_data
+            elif opt == 1:
+                return edit_particular_sem_mark(list_data, roll_num, 0)
+            elif opt == 2:
+                return edit_particular_sem_mark(list_data, roll_num, 1)
+            elif opt == 3:
+                return edit_particular_sem_mark(list_data, roll_num, 2)
+            elif opt == 4:
+                return edit_particular_sem_mark(list_data, roll_num, 3)
+            elif opt == 5:
+                return edit_particular_sem_mark(list_data, roll_num, 4)
+            elif opt == 6:
+                return edit_particular_sem_mark(list_data, roll_num, 5)
+            elif opt == 7:
+                stu_details = common_student_data(roll_num)
+                return stu_details
         except ValueError:
             print('***ENTER VALID DETAILS***')
             print('_________________________________________________')
             None
 
 
+# DELETE STUDENT 6 SEM MARKS FOR DELETE STUDENT
 def delete_stu_sem_mark(roll_num, k):
     for j in range(len(data[semesters[k]])):
         if data[semesters[k]][j]['Roll Number'] == roll_num:
             del data[semesters[k]][j]
+            break
 
 
-def delete_student(roll_num):
+# delete_student_profile FOR delete_student & edit_stu
+def delete_student_profile(roll_num):
     for i in range(len(data['Students'])):
         if data['Students'][i]['Roll Number'] == roll_num:
             del data['Students'][i]
-            break
+            return True
 
-    for k in range(6):
-        delete_stu_sem_mark(roll_num, k)
 
-    write_json(filename, data)
-    return True
+# DELETE STUDENT
+def delete_student(roll_num):
+
+    if delete_student_profile(roll_num):
+        for k in range(6):
+            delete_stu_sem_mark(roll_num, k)
+        write_json(filename, data)
+        return True
+    else:
+        return False
 
 
 # MAIN INDEX OPTION
@@ -358,7 +427,7 @@ def main():
         elif val == 4:
             while True:
                 try:
-                    roll_num = input("Roll Num : ")
+                    roll_num = str(input("Roll Num : "))
                     int(roll_num)
                     if chk_student_byID(roll_num):
                         if delete_student(roll_num):
